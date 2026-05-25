@@ -1,4 +1,4 @@
-const { trans_tb } = require('../models');
+const { trans_tb, AC_tb, mem_tb } = require('../models');
 
 // GET all Transaction records
 const getAll = async (req, res, next) => {
@@ -33,7 +33,20 @@ const getAll = async (req, res, next) => {
     const records = await trans_tb.findAll({
       where,
       order: orderCondition,
-      limit: 5000, // Limit to 5000 records for performance
+      include: [
+        {
+          model: AC_tb,
+          as: 'account',
+          attributes: ['ACID', 'MemID'],
+          include: [
+            {
+              model: mem_tb,
+              as: 'member',
+              attributes: ['name', 'desgn'],
+            },
+          ],
+        },
+      ],
     });
 
 
@@ -50,7 +63,22 @@ const getAll = async (req, res, next) => {
 // GET single Transaction record by Trans_ID
 const getById = async (req, res, next) => {
   try {
-    const record = await trans_tb.findByPk(req.params.id);
+    const record = await trans_tb.findByPk(req.params.id, {
+      include: [
+        {
+          model: AC_tb,
+          as: 'account',
+          attributes: ['ACID', 'MemID'],
+          include: [
+            {
+              model: mem_tb,
+              as: 'member',
+              attributes: ['name', 'desgn'],
+            },
+          ],
+        },
+      ],
+    });
     if (!record) {
       return res.status(404).json({
         success: false,

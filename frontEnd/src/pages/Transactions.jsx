@@ -11,6 +11,7 @@ const PAGE_SIZE = 20
 
 export default function Transactions() {
   const { transactions, loading, fetchAll } = useTransactions()
+  const [acSubs, setAcSubs] = useState([])
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -109,6 +110,23 @@ export default function Transactions() {
             </button>
           )}
         </div>
+{/* 
+      <div className="relative flex-1 min-w-[280px] max-w-md">
+        <ComboSearchBox
+        items={acSubs}
+        value={0}
+        onSearch={handleAccountSearch}
+        placeholder="Search accounts"
+        searchFields={['ACID', 'ACNO',  'AC_Sub', 'memberName' ]}
+        displayFields={['ACID', 'ACNO', 'AC_Sub', 'memberName']}
+        fieldLabels={{ ACID: 'AC ID', ACNO: 'Account No', AC_Sub: 'AC_Sub', memberName: 'Member Name' }}
+        valueField="displayLabel"
+        highlightField="ACNO"
+        className="w-full"
+        />
+    </div>  */}
+
+        
 
         <div className="ml-auto flex items-center gap-2">
           <button
