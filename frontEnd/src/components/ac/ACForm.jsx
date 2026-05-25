@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import memberService from '../../services/memberService'
+import transDescService from '../../services/transDescService'
 import ComboSearchBox from '../ui/ComboSearchBox'
 import toast from 'react-hot-toast'
 
@@ -23,15 +24,16 @@ const EMPTY = {
 const FIELDS = [
   { key: 'MemID',      label: 'Member ID',          type: 'number', required: true },
   { key: 'ACNO',       label: 'Account Number',      required: true },
-  { key: 'AC_type',    label: 'Account Type' },
-  { key: 'AC_Sub',     label: 'Account Sub-Type' },
+  { key: 'AC_Sub',     label: 'Account Sub-Type', required: true},
+  // { key: 'AC_type',    label: 'Account Type' },
   { key: 'DOC',        label: 'Date of Commencement',type: 'date' },
   { key: 'Amt',        label: 'Amount',             type: 'number', step: '0.01' },
   { key: 'Period',     label: 'Period (Months)',    type: 'number' },
-  { key: 'CloseDT',    label: 'Closing Date',        type: 'date' },
-  { key: 'prn',        label: 'Principal Amount',    type: 'number', step: '0.01' },
-  { key: 'int',        label: 'Interest Amount',     type: 'number', step: '0.01' },
   { key: 'rate',       label: 'Interest Rate (%)',   type: 'number', step: '0.0001' },
+  { key: 'CloseDT',    label: 'Closing Date',        type: 'date' },
+  { key: 'prn',        label: 'EMI',    type: 'number', step: '0.01' },
+  // { key: 'int',        label: 'Interest Amount',     type: 'number', step: '0.01' },  
+
   { key: 'IntCalType', label: 'Interest Calc Type' },
   { key: 'Remarks',    label: 'Remarks',             col: 2 },
 ]
@@ -39,7 +41,9 @@ const FIELDS = [
 export default function ACForm({ initialData, onSubmit, onCancel, isSubmitting }) {
   const [form, setForm] = useState(EMPTY)
   const [members, setMembers] = useState([])
+  const [acSubs, setAcSubs] = useState([])
   const [loadingMembers, setLoadingMembers] = useState(false)
+  const [loadingAcSubs, setLoadingAcSubs] = useState(false)
 
   // Load members for real-time validation name display
   useEffect(() => {
@@ -53,8 +57,25 @@ export default function ACForm({ initialData, onSubmit, onCancel, isSubmitting }
       } finally {
         setLoadingMembers(false)
       }
-    }
+    }    
     loadMembers()
+  }, [])
+
+  useEffect(() => {
+    async function loadAcSubs() {    
+      
+      setLoadingAcSubs(true)
+      try {
+        const res = await transDescService.getAcSubs()
+        console.log('Loaded AC_Sub values for form helper:', res.data)
+        setAcSubs(res.data ?? [])
+      } catch (err) {
+        console.error('Failed to load AC_Sub values for form helper:', err)
+      } finally {
+        setLoadingAcSubs(false)
+      }
+    }
+    loadAcSubs()
   }, [])
 
   useEffect(() => {
@@ -128,8 +149,37 @@ export default function ACForm({ initialData, onSubmit, onCancel, isSubmitting }
                 fieldLabels={{ MemID: 'ID', name: 'Name', desgn: 'Rank' }}
                 valueField="MemID"
                 disabled={isSubmitting}
-              />
-            ) : (
+              />              
+            ) 
+            : key === 'AC_Sub' ? (
+              <select
+                id={`field-${key}`}
+                value={form[key]}
+                onChange={(e) => set(key, e.target.value)}
+                className="input"
+              >
+                <option value="">Select AC_Sub</option>
+                {acSubs.map((sub) => (
+                  <option key={sub.AC_Sub} value={sub.AC_Sub}>
+                    {sub.AC_Sub}
+                  </option>
+                ))}
+              </select>
+            ):
+              key === 'IntCalType' ? (
+              <select
+                id={`field-${key}`}
+                value={form[key]}
+                onChange={(e) => set(key, e.target.value)}
+                className="input"
+              >
+                <option value="M">Monthly</option>
+                <option value="D">Daily</option>
+                <option value="R">Recurring</option>             
+                
+              </select>
+            ):
+            (
               <input
                 id={`field-${key}`}
                 type={type || 'text'}

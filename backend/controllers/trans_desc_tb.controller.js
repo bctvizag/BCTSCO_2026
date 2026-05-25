@@ -1,4 +1,5 @@
-const { Trans_desc_tb } = require("../models/index");
+const { sequelize, Trans_desc_tb } = require("../models/index");
+const { QueryTypes } = require('sequelize');
 
 const getAll = async (req, res, next) => {
     try {
@@ -12,6 +13,34 @@ const getAll = async (req, res, next) => {
         next(error);
     }
 };
+
+
+const getAC_Sub = async (req, res, next) => {
+    try {       
+
+        const records = await sequelize.query(
+            `
+            SELECT DISTINCT AC_Sub, AC_type
+            FROM Trans_desc_tb
+            WHERE AC_Sub IN ('LT', 'Thrift')
+            `,
+            {
+                type: QueryTypes.SELECT
+            }
+        );
+
+        res.json({
+            success: true,
+            count: records.length,
+            data: records,
+        });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
 
 const getById = async (req, res, next) => {
     try {
@@ -28,4 +57,4 @@ const getById = async (req, res, next) => {
     }
 };
 
-module.exports = { getAll, getById };
+module.exports = { getAll, getById, getAC_Sub };

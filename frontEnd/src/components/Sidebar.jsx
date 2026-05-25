@@ -12,7 +12,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/members',   icon: Users,           label: 'Members' },
   { to: '/ac',        icon: CreditCard,      label: 'AC Accounts' },
-  { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions', disabled: true },
+  { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
   { to: '/actions',   icon: Zap,             label: 'Actions',      disabled: true },
   { to: '/chqdetails',icon: Database,        label: 'Cheque Details', disabled: true },
 ]

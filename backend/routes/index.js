@@ -15,6 +15,6 @@ router.use('/actions', actionRoutes);
 router.use('/chqdetails', chqdetailsRoutes);
 router.use('/members', memRoutes);
 router.use('/transactions', transRoutes);
-router.use('/trans_desc_tb', transDescRoutes);
+router.use('/transDesc', transDescRoutes);
 
 module.exports = router;
