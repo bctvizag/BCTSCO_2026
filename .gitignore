@@ -1,0 +1,6 @@
+*.zip
+*.docx
+/node_modules
+backEnd/node_modules
+frontEnd/node_modules
+
