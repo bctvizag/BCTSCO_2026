@@ -3,7 +3,39 @@ const { trans_tb } = require('../models');
 // GET all Transaction records
 const getAll = async (req, res, next) => {
   try {
-    const records = await trans_tb.findAll();
+    const { orderBy, order = "ASC", ...filters } = req.query;
+
+  
+    console.log("Query Params:", req.query);
+
+    // Build WHERE condition dynamically
+    const where = {};
+
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] !== undefined && filters[key] !== "") {
+        where[key] = filters[key];
+      }
+    });
+
+    // Build ORDER condition
+    let orderCondition = [];
+
+    if (orderBy) {
+      orderCondition.push([
+        orderBy,
+        order.toUpperCase() === "DESC" ? "DESC" : "ASC",
+      ]);
+    }
+
+    console.log("Filters:", where);
+    console.log("Order:", orderCondition);
+
+    const records = await trans_tb.findAll({
+      where,
+      order: orderCondition,
+    });
+
+
     res.json({
       success: true,
       count: records.length,

@@ -4,7 +4,7 @@ const ENDPOINT = '/transDesc'
 
 const transDescService = {
     /** Fetch all transaction descriptions */
-    getAll: () => api.get(ENDPOINT),
+    getAll: () => api.get(`${ENDPOINT}`),
     /** Fetch transaction description by ID */
     getById: (id) => api.get(`${ENDPOINT}/${id}`),
     /** Fetch distinct AC_Sub values for dropdown */

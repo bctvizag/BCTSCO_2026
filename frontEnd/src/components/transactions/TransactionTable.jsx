@@ -1,8 +1,7 @@
 import { useMemo } from 'react'
 import TotalCell from './TotalCell'
 
-const COLUMNS = [
-//   { key: 'Trans_ID', label: 'Trans ID', width: 'w-20' },
+const COLUMNS = [   
   { key: 'ACID', label: 'AC ID', width: 'w-16' },  
   { key: 'Trans_desc', label: 'Description', width: 'w-40' },
   { key: 'Trans_dt', label: 'Date', width: 'w-24', isDate: true },
@@ -20,6 +19,7 @@ const COLUMNS = [
  
   { key: 'AC_Sub', label: 'AC Sub', width: 'w-24' },
   { key: 'Remarks', label: 'Remarks', width: 'w-40' },
+  { key: 'Trans_ID', label: 'Trans ID', width: 'w-20' },
 ]
 
 const fmt = (val, col) => {
