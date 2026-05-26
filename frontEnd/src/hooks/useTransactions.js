@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import transactionService from '../services/transactionService'
 import toast from 'react-hot-toast'
 
@@ -21,9 +21,19 @@ export function useTransactions() {
     }
   }, [])
 
-  useEffect(() => {
-    fetchAll()
-  }, [fetchAll])
+  const fetchByAcid = useCallback(async (acid) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await transactionService.getByAcid(acid)
+      setTransactions(res.data ?? [])
+    } catch (err) {
+      setError(err.message)
+      toast.error(`Failed to load transactions for ACID ${acid}: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
-  return { transactions, loading, error, fetchAll }
+  return { transactions, loading, error, fetchAll, fetchByAcid }
 }

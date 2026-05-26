@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import TotalCell from './TotalCell'
+import TotalBalCell from './TotalBalCell'
 
 const COLUMNS = [   
   { key: 'ACID', label: 'AC ID', width: 'w-16' },  
@@ -11,6 +12,8 @@ const COLUMNS = [
   { key: 'Total_amt', label: 'Total', width: 'w-24', isDecimal: true },
   { key: 'PRN', label: 'PRN', width: 'w-20', isDecimal: true },
   { key: 'INT', label: 'INT', width: 'w-20', isDecimal: true },
+  { key: 'Total_Bal', label: 'Total Bal', width: 'w-24', isDecimal: true },
+  
   { key: 'rate', label: 'Rate', width: 'w-18', isRate: true },
   { key: 'Days', label: 'Days', width: 'w-16' },
 //   { key: 'Status', label: 'Status', width: 'w-20' },
@@ -19,6 +22,7 @@ const COLUMNS = [
  
   { key: 'AC_Sub', label: 'AC Sub', width: 'w-24' },
   { key: 'Remarks', label: 'Remarks', width: 'w-40' },
+  { key: 'ActionID', label: 'Batch No', width: 'w-40' },
   { key: 'Trans_ID', label: 'Trans ID', width: 'w-20' },
 ]
 
@@ -54,10 +58,16 @@ const statusBadge = (status) => {
 export default function TransactionTable({ transactions }) {
   const normalized = useMemo(
     () =>
-      transactions.map((txn) => ({
-        ...txn,
-        Status: txn.Status ?? 'Pending',
-      })),
+      transactions.map((txn) => {
+        const prnB = Number(txn.PRN_B ?? 0)
+        const intB = Number(txn.INT_B ?? 0)
+
+        return {
+          ...txn,
+          Status: txn.Status ?? 'Pending',
+          Total_Bal: prnB + intB,
+        }
+      }),
     [transactions]
   )
 
@@ -93,7 +103,9 @@ export default function TransactionTable({ transactions }) {
                     ? statusBadge(txn[col.key])
                     : col.key === 'Total_amt'
                       ? <TotalCell txn={txn} />
-                      : fmt(txn[col.key], col)}
+                      : col.key === 'Total_Bal'
+                        ? <TotalBalCell txn={txn} />
+                        : fmt(txn[col.key], col)}
                 </td>
               ))}
             </tr>

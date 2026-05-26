@@ -13,7 +13,7 @@ import ComboSearchBox from '../components/ui/ComboSearchBox'
 const PAGE_SIZE = 20
 
 export default function Transactions() {
-  const { transactions, loading, fetchAll } = useTransactions()
+  const { transactions, loading, fetchAll, fetchByAcid } = useTransactions()
   const [selectedAC, setSelectedAC] = useState(null)
   const [acSearchVal, setAcSearchVal] = useState('')
   const [acSubs, setAcSubs] = useState([])
@@ -21,12 +21,6 @@ export default function Transactions() {
 
   const filtered = useMemo(() => {
     let result = transactions
-
-    if (selectedAC) {
-      result = result.filter(
-        (txn) => Number(txn.ACID) === Number(selectedAC.ACID)
-      )
-    }
 
     const q = search.toLowerCase().trim()
     if (!q) return result
@@ -53,7 +47,11 @@ export default function Transactions() {
         txn.Remarks,
       ].some((value) => value && value.toString().toLowerCase().includes(q))
     )
-  }, [search, transactions, selectedAC])
+  }, [search, transactions])
+
+  useEffect(() => {
+    fetchAll()
+  }, [fetchAll])
 
   useEffect(() => {
     const loadAcSubs = async () => {
@@ -64,6 +62,7 @@ export default function Transactions() {
           return {
             ...item,
             memberName: mName,
+            gno: item.member?.gno || '',
             displayLabel: `${item.ACID} - ${item.ACNO || ''} - ${item.AC_Sub || ''} (${mName})`.replace(/\s+-\s+$/, '')
           }
         })
@@ -75,6 +74,14 @@ export default function Transactions() {
     loadAcSubs()
   }, [])
 
+  useEffect(() => {
+    if (!selectedAC) {
+      fetchAll()
+      return
+    }
+
+    fetchByAcid(selectedAC.ACID)
+  }, [fetchAll, fetchByAcid, selectedAC])
 
   const { paged, page, totalPages, next, prev, goTo, reset, total } = usePagination(
     filtered,
@@ -98,6 +105,7 @@ export default function Transactions() {
       Total: txn.Total_amt,
       PRN: txn.PRN,
       INT: txn.INT,
+      'Total Bal': Number(txn.PRN_B ?? 0) + Number(txn.INT_B ?? 0),
       Rate: txn.rate,
       Days: txn.Days,
       Status: txn.Status,
@@ -142,7 +150,48 @@ export default function Transactions() {
           </span>
         </h2>
 
-        <div className="relative flex-1 min-w-[180px] max-w-xs">
+
+
+        <div className="w-px h-5 bg-slate-300" />
+
+            <div className="relative">
+        <select
+          aria-label="Filter by"
+          className="input text-xs"
+          onChange={(e) => {
+            console.log('Group by selected:', e.target.value)
+          }}
+        >
+          <option value="">Filter by</option>
+          <option value="ACID">ACID</option>
+          <option value="MEMID">MEMID</option>
+          <option value="Batch NO">Batch NO</option>
+        </select>
+      </div>
+
+      <div className="relative flex-1 min-w-[280px] max-w-md">
+        <ComboSearchBox  
+          items={acSubs}
+          value={selectedAC ? selectedAC.displayLabel : acSearchVal}
+          
+          onSearch={handleAccountSearch}
+          
+          onSelect={(item) => {
+            setSelectedAC(item)
+            reset()
+          }}
+          placeholder="Search accounts"
+          searchFields={['ACID', 'ACNO', 'AC_Sub', 'memberName', 'gno']}
+          displayFields={['ACID', 'ACNO', 'AC_Sub', 'memberName', 'gno']}
+          fieldLabels={{ ACID: 'AC ID', ACNO: 'Account No', AC_Sub: 'AC_Sub', memberName: 'Member Name', gno: 'GNO' }}
+          valueField="ACID"
+          highlightField="ACNO"
+          className="w-full"
+          
+        />
+      </div>
+
+              <div className="relative flex-1 min-w-[180px] max-w-xs">
           <Search
             size={12}
             className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -165,34 +214,12 @@ export default function Transactions() {
             </button>
           )}
         </div>
-
-      <div className="relative flex-1 min-w-[280px] max-w-md">
-        <ComboSearchBox  
-          items={acSubs}
-          value={selectedAC ? selectedAC.displayLabel : acSearchVal}
-          
-          onSearch={handleAccountSearch}
-          
-          onSelect={(item) => {
-            setSelectedAC(item)
-            reset()
-          }}
-          placeholder="Search accounts"
-          searchFields={['ACID', 'ACNO', 'AC_Sub', 'memberName']}
-          displayFields={['ACID', 'ACNO', 'AC_Sub', 'memberName']}
-          fieldLabels={{ ACID: 'AC ID', ACNO: 'Account No', AC_Sub: 'AC_Sub', memberName: 'Member Name' }}
-          valueField="ACID"
-          highlightField="ACNO"
-          className="w-full"
-          
-        />
-      </div>
            
 
 
         <div className="ml-auto flex items-center gap-2">
           <button
-            onClick={fetchAll}
+            onClick={() => selectedAC ? fetchByAcid(selectedAC.ACID) : fetchAll()}
             disabled={loading}
             className="btn-secondary gap-1.5"
             aria-label="Refresh transactions"
@@ -235,17 +262,10 @@ export default function Transactions() {
         )}
       </div> 
 
-
-       <div>
-        selected 
+{/* PRE DIV */}
+       <div>         
         <pre>
-           {/* {JSON.stringify(acSubs, null, 2)} */}
-          selectedAC :
-           {JSON.stringify(selectedAC, null, 2)}
-
-          acSearchVal : 
-           {JSON.stringify(acSearchVal, null, 2)}
-           {/* {JSON.stringify(selectedAC.member.name, null, 2)} */}
+           {/* {JSON.stringify(acSubs, null, 2)} */}          
         </pre>
        </div>
     </div>

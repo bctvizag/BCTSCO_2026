@@ -8,7 +8,7 @@ const getAll = async (req, res, next) => {
         {
           model: mem_tb,
           as: 'member',
-          attributes: ['name', 'desgn'],
+          attributes: ['name', 'desgn', 'gno'],
         },
       ],
     });
@@ -30,7 +30,7 @@ const getById = async (req, res, next) => {
         {
           model: mem_tb,
           as: 'member',
-          attributes: ['name', 'desgn'],
+          attributes: ['name', 'desgn', 'gno'],
         },
       ],
     });
@@ -77,7 +77,7 @@ const update = async (req, res, next) => {
         {
           model: mem_tb,
           as: 'member',
-          attributes: ['name', 'desgn'],
+          attributes: ['name', 'desgn', 'gno'],
         },
       ],
     });
