@@ -201,7 +201,7 @@ export default function Transactions() {
             type="text"
             value={search}
             onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search transaction, invoice, status..."
+            placeholder="Search transaction, status..."
             className="input pl-7 pr-7"
           />
           {search && (

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAll, getById, getByAcid, create, update, remove } = require('../controllers/trans.controller');
+const { getAll, getById, getByAcid, create, update, remove, FilterByColumn } = require('../controllers/trans.controller');
 
 /**
  * @route   GET /api/transactions
@@ -29,6 +29,7 @@ router.get('/ACID/:acid', getByAcid);
  */
 
 
+
 router.post('/', create);
 
 /**
@@ -42,5 +43,7 @@ router.put('/:id', update);
  * @desc    Delete Transaction record by Trans_ID
  */
 router.delete('/:id', remove);
+
+router.post('/filter', FilterByColumn);
 
 module.exports = router;

@@ -35,5 +35,20 @@ export function useTransactions() {
     }
   }, [])
 
-  return { transactions, loading, error, fetchAll, fetchByAcid }
+  const filterByColumn = useCallback(async (column, value) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await transactionService.filterByColumn(column, value)
+      setTransactions(res.data ?? [])
+    } catch (err) {
+      setError(err.message)
+      toast.error(`Failed to filter transactions by ${column}: ${err.message}`)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+
+  return { transactions, loading, error, fetchAll, fetchByAcid, filterByColumn  }
 }

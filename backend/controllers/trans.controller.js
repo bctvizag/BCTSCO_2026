@@ -80,6 +80,22 @@ const getByAcid = async (req, res, next) => {
   }
 };
 
+// Post Method filter Transaction record by column and value
+const FilterByColumn = async (req, res, next) => {
+  try {
+    const { column, value } = req.body;
+    const records = await trans_tb.findAll({
+      where: {
+        [column]: value
+      }
+    });
+    res.json({ success: true, data: records });
+  } catch (error) {
+    next(error);
+  }
+};  
+
+
 // POST create new Transaction record
 const create = async (req, res, next) => {
   try {
@@ -138,4 +154,4 @@ const remove = async (req, res, next) => {
   }
 };
 
-module.exports = { getAll, getById, getByAcid, create, update, remove };
+module.exports = { getAll, getById, getByAcid,create, update, remove, FilterByColumn };

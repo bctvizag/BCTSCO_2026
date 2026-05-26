@@ -13,7 +13,7 @@ export default function Header() {
     <header className="h-11 shrink-0 bg-white border-b border-slate-200 flex items-center px-5 gap-3">
       <div>
         <h1 className="text-sm font-semibold text-slate-800">{title}</h1>
-        <p className="text-2xs text-slate-400">SQL Admin Panel · SOCRJY</p>
+        <p className="text-2xs text-slate-400">Babbage Computers</p>
       </div>
       <div className="ml-auto flex items-center gap-2">
         <span className="text-2xs text-slate-400">
