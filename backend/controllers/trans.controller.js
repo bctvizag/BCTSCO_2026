@@ -63,6 +63,23 @@ const getById = async (req, res, next) => {
   }
 };
 
+
+// GET single Transaction record by ACID
+const getByAcid = async (req, res, next) => {
+  try {    const records = await trans_tb.findAll({
+      where: { ACID: req.params.acid },
+    });
+    if (!records || records.length === 0) {
+      return res.status(404).json({
+        success: false,        message: `No transactions found for ACID=${req.params.acid}`,
+      });
+    }
+    res.json({ success: true, data: records });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST create new Transaction record
 const create = async (req, res, next) => {
   try {
@@ -121,4 +138,4 @@ const remove = async (req, res, next) => {
   }
 };
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = { getAll, getById, getByAcid, create, update, remove };

@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, ChevronDown, ChevronUp } from 'lucide-react'
 
 export default function ComboSearchBox({
@@ -21,7 +22,7 @@ export default function ComboSearchBox({
   const [results, setResults] = useState([])
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [isOpen, setIsOpen] = useState(false)
-  const [dropdownPosition, setDropdownPosition] = useState('below')
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, isReady: false })
 
   const containerRef = useRef(null)
   const inputRef = useRef(null)
@@ -59,6 +60,7 @@ export default function ComboSearchBox({
       return
     }
 
+       
     const searchTerms = query
       .toLowerCase()
       .split(' ')
@@ -74,7 +76,7 @@ export default function ComboSearchBox({
         )
       })
       .slice(0, maxResults)
-
+      
     setResults(filteredResults)
     setSelectedIndex(-1)
 
@@ -83,19 +85,58 @@ export default function ComboSearchBox({
     }
   }, [query, items, searchFields, maxResults, onSearch])
 
-  // Position dropdown based on available space
-  useEffect(() => {
-    if (isOpen && containerRef.current) {
+  // Position dropdown based on available space and viewport bounds
+  useLayoutEffect(() => {
+    if (!isOpen || !containerRef.current) {
+      if (coords.isReady) {
+        setCoords((prev) => ({ ...prev, isReady: false }))
+      }
+      return
+    }
+
+    const updatePosition = () => {
+      if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
       const viewportHeight = window.innerHeight
       const spaceBelow = viewportHeight - rect.bottom
       const spaceAbove = rect.top
-      const dropdownHeight = Math.min(300, results.length * 30 + 60) // Estimate dropdown height
+      
+      const dropdownHeight = dropdownRef.current ? dropdownRef.current.offsetHeight : 200
 
+      let top
       if (spaceBelow < dropdownHeight && spaceAbove > spaceBelow) {
-        setDropdownPosition('above')
+        top = rect.top - dropdownHeight - 4
       } else {
-        setDropdownPosition('below')
+        top = rect.bottom + 4
+      }
+
+      setCoords({
+        top: top,
+        left: rect.left,
+        width: rect.width,
+        isReady: true,
+      })
+    }
+
+    updatePosition()
+
+    let resizeObserver
+    if (dropdownRef.current) {
+      resizeObserver = new ResizeObserver(() => {
+        updatePosition()
+      })
+      resizeObserver.observe(dropdownRef.current)
+    }
+
+    // Use capture phase to catch scroll events from parent elements
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+      if (resizeObserver) {
+        resizeObserver.disconnect()
       }
     }
   }, [isOpen, results.length])
@@ -103,7 +144,11 @@ export default function ComboSearchBox({
   // Handle clicks outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target) &&
+        (!dropdownRef.current || !dropdownRef.current.contains(event.target))
+      ) {
         setIsOpen(false)
       }
     }
@@ -137,7 +182,8 @@ export default function ComboSearchBox({
   }, [selectedIndex])
 
   const handleKeyDown = (e) => {
-    if (disabled) return
+    if (disabled) return  
+    
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -301,13 +347,17 @@ export default function ComboSearchBox({
       </div>
 
       {/* Dropdown Overlay */}
-      {isOpen && (
+      {isOpen && createPortal(
         <div
           ref={dropdownRef}
-          className={`absolute left-0 right-0 z-50 bg-white border border-slate-200 rounded-md shadow-lg overflow-hidden ${
-            dropdownPosition === 'above' ? 'bottom-full mb-1' : 'top-full mt-1'
-          }`}
-          style={{ minWidth: '100%' }}
+          className="fixed z-[9999] bg-white border border-slate-200 rounded-md shadow-lg overflow-hidden transition-opacity duration-75"
+          style={{
+            top: `${coords.top}px`,
+            left: `${coords.left}px`,
+            width: `${coords.width}px`,
+            opacity: coords.isReady ? 1 : 0,
+            pointerEvents: coords.isReady ? 'auto' : 'none',
+          }}
         >
           {/* Results Count */}
           {showResultsCount && query.trim() && (
@@ -377,7 +427,8 @@ export default function ComboSearchBox({
               Type to search...
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

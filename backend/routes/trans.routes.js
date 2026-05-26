@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAll, getById, create, update, remove } = require('../controllers/trans.controller');
+const { getAll, getById, getByAcid, create, update, remove } = require('../controllers/trans.controller');
 
 /**
  * @route   GET /api/transactions
@@ -12,7 +12,13 @@ router.get('/', getAll);
  * @route   GET /api/transactions/:id
  * @desc    Get Transaction record by Trans_ID
  */
-router.get('/:id', getById);
+router.get('/Trans_ID/:id', getById);
+
+/**
+ * @route   GET /api/transactions/ACID/:acid
+ * @desc    Get Transaction records by ACID
+ */
+router.get('/ACID/:acid', getByAcid);
 
 /**
  * @route   POST /api/transactions
@@ -21,6 +27,8 @@ router.get('/:id', getById);
  *            Total_amt, PRN, PRN_D, PRN_C, PRN_B, INT, INT_D, INT_C, INT_B, rate, Days,
  *            Status, T_Order, CreatedBy, Remarks, CB_side, MEMID, Trans_desc, IntCalType, AC_Sub }
  */
+
+
 router.post('/', create);
 
 /**

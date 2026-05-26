@@ -1,24 +1,37 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { Search, RefreshCw, X, FileSpreadsheet } from 'lucide-react'
 import { exportToExcel } from '../utils/excelExport'
 import { useTransactions } from '../hooks/useTransactions'
 import { usePagination } from '../hooks/usePagination'
 import TransactionTable from '../components/transactions/TransactionTable'
+import  acservice from '../services/acservice'
 import Pagination from '../components/ui/Pagination'
 import Spinner from '../components/ui/Spinner'
+import ComboSearchBox from '../components/ui/ComboSearchBox'
+
 
 const PAGE_SIZE = 20
 
 export default function Transactions() {
   const { transactions, loading, fetchAll } = useTransactions()
+  const [selectedAC, setSelectedAC] = useState(null)
+  const [acSearchVal, setAcSearchVal] = useState('')
   const [acSubs, setAcSubs] = useState([])
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim()
-    if (!q) return transactions
+    let result = transactions
 
-    return transactions.filter((txn) =>
+    if (selectedAC) {
+      result = result.filter(
+        (txn) => Number(txn.ACID) === Number(selectedAC.ACID)
+      )
+    }
+
+    const q = search.toLowerCase().trim()
+    if (!q) return result
+
+    return result.filter((txn) =>
       [
         txn.Trans_ID,
         txn.Trans_dt,
@@ -40,7 +53,28 @@ export default function Transactions() {
         txn.Remarks,
       ].some((value) => value && value.toString().toLowerCase().includes(q))
     )
-  }, [search, transactions])
+  }, [search, transactions, selectedAC])
+
+  useEffect(() => {
+    const loadAcSubs = async () => {
+      try {
+        const res = await acservice.getAll()
+        const mapped = (res.data ?? []).map((item) => {
+          const mName = item.member?.name || ''
+          return {
+            ...item,
+            memberName: mName,
+            displayLabel: `${item.ACID} - ${item.ACNO || ''} - ${item.AC_Sub || ''} (${mName})`.replace(/\s+-\s+$/, '')
+          }
+        })
+        setAcSubs(mapped)
+      } catch (err) {
+        console.error('Failed to load AC_Sub values for form helper:', err)
+      }
+    }
+    loadAcSubs()
+  }, [])
+
 
   const { paged, page, totalPages, next, prev, goTo, reset, total } = usePagination(
     filtered,
@@ -77,6 +111,27 @@ export default function Transactions() {
     exportToExcel(exportData, 'Transactions.xlsx', 'Transactions')
   }
 
+  const handleAccountSearch = (val, results = []) => {
+    setAcSearchVal(val)
+
+    const selectedItem = results[0]
+    const isExplicitSelection = Boolean(selectedItem)
+
+    if (!isExplicitSelection && selectedAC) {
+      const currentQuery = val.trim().toLowerCase()
+      const matchesCurrentLabel = selectedAC.displayLabel?.toLowerCase() === currentQuery
+      const matchesCurrentId = String(selectedAC.ACID).toLowerCase() === currentQuery
+
+      if (!matchesCurrentLabel && !matchesCurrentId) {
+        setSelectedAC(null)
+      }
+    }
+
+    if (!val) {
+      reset()
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div className="card px-3 py-2.5 flex flex-wrap items-center gap-2">
@@ -110,23 +165,30 @@ export default function Transactions() {
             </button>
           )}
         </div>
-{/* 
-      <div className="relative flex-1 min-w-[280px] max-w-md">
-        <ComboSearchBox
-        items={acSubs}
-        value={0}
-        onSearch={handleAccountSearch}
-        placeholder="Search accounts"
-        searchFields={['ACID', 'ACNO',  'AC_Sub', 'memberName' ]}
-        displayFields={['ACID', 'ACNO', 'AC_Sub', 'memberName']}
-        fieldLabels={{ ACID: 'AC ID', ACNO: 'Account No', AC_Sub: 'AC_Sub', memberName: 'Member Name' }}
-        valueField="displayLabel"
-        highlightField="ACNO"
-        className="w-full"
-        />
-    </div>  */}
 
-        
+      <div className="relative flex-1 min-w-[280px] max-w-md">
+        <ComboSearchBox  
+          items={acSubs}
+          value={selectedAC ? selectedAC.displayLabel : acSearchVal}
+          
+          onSearch={handleAccountSearch}
+          
+          onSelect={(item) => {
+            setSelectedAC(item)
+            reset()
+          }}
+          placeholder="Search accounts"
+          searchFields={['ACID', 'ACNO', 'AC_Sub', 'memberName']}
+          displayFields={['ACID', 'ACNO', 'AC_Sub', 'memberName']}
+          fieldLabels={{ ACID: 'AC ID', ACNO: 'Account No', AC_Sub: 'AC_Sub', memberName: 'Member Name' }}
+          valueField="ACID"
+          highlightField="ACNO"
+          className="w-full"
+          
+        />
+      </div>
+           
+
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -148,8 +210,9 @@ export default function Transactions() {
             Export
           </button>
         </div>
-      </div>
 
+      </div>       
+    
       <div className="card">
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-slate-400 text-xs">
@@ -170,7 +233,21 @@ export default function Transactions() {
             />
           </>
         )}
-      </div>
+      </div> 
+
+
+       <div>
+        selected 
+        <pre>
+           {/* {JSON.stringify(acSubs, null, 2)} */}
+          selectedAC :
+           {JSON.stringify(selectedAC, null, 2)}
+
+          acSearchVal : 
+           {JSON.stringify(acSearchVal, null, 2)}
+           {/* {JSON.stringify(selectedAC.member.name, null, 2)} */}
+        </pre>
+       </div>
     </div>
   )
 }

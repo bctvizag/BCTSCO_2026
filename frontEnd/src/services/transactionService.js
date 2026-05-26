@@ -7,7 +7,11 @@ const transactionService = {
   getAll: () => api.get(`${ENDPOINT}?orderBy=Trans_ID&order=DESC`),
 
   /** Fetch one transaction record by Trans_ID */
-  getById: (id) => api.get(`${ENDPOINT}/${id}`),
+  getById: (id) => api.get(`${ENDPOINT}/Trans_ID/${id}`),
+
+  /** Fetch transaction records by ACID */
+  getByAcid: (acid) => api.get(`${ENDPOINT}/ACID/${acid}`),
+  
 }
 
 export default transactionService
