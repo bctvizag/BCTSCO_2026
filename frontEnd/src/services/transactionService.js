@@ -11,7 +11,9 @@ const transactionService = {
 
   /** Fetch transaction records by ACID */
   getByAcid: (acid) => api.get(`${ENDPOINT}/ACID/${acid}`),
-  
+
+  /** Filter transaction records by column and value */
+  filterByColumn: (column, value) => api.post(`${ENDPOINT}/filter`, { column, value }),
 }
 
 export default transactionService

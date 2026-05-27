@@ -5,6 +5,7 @@ import { useTransactions } from '../hooks/useTransactions'
 import { usePagination } from '../hooks/usePagination'
 import TransactionTable from '../components/transactions/TransactionTable'
 import  acservice from '../services/acservice'
+import memberService from '../services/memberService'
 import Pagination from '../components/ui/Pagination'
 import Spinner from '../components/ui/Spinner'
 import ComboSearchBox from '../components/ui/ComboSearchBox'
@@ -13,11 +14,16 @@ import ComboSearchBox from '../components/ui/ComboSearchBox'
 const PAGE_SIZE = 20
 
 export default function Transactions() {
-  const { transactions, loading, fetchAll, fetchByAcid } = useTransactions()
+  const { transactions, loading, fetchAll, fetchByAcid, filterByColumn } = useTransactions()
   const [selectedAC, setSelectedAC] = useState(null)
   const [acSearchVal, setAcSearchVal] = useState('')
   const [acSubs, setAcSubs] = useState([])
+  const [members, setMembers] = useState([])
+  const [selectedMember, setSelectedMember] = useState(null)
+  const [memberSearchVal, setMemberSearchVal] = useState('')
+  const [batchNoSearchVal, setBatchNoSearchVal] = useState('')
   const [search, setSearch] = useState('')
+  const [filterType, setFilterType] = useState('ACID')
 
   const filtered = useMemo(() => {
     let result = transactions
@@ -50,10 +56,6 @@ export default function Transactions() {
   }, [search, transactions])
 
   useEffect(() => {
-    fetchAll()
-  }, [fetchAll])
-
-  useEffect(() => {
     const loadAcSubs = async () => {
       try {
         const res = await acservice.getAll()
@@ -75,18 +77,128 @@ export default function Transactions() {
   }, [])
 
   useEffect(() => {
-    if (!selectedAC) {
-      fetchAll()
+    const loadMembers = async () => {
+      try {
+        const res = await memberService.getAll()
+        const mappedMembers = (res.data ?? []).map((item) => ({
+          ...item,
+          displayLabel: `${item.MemID} - ${item.name || ''} (${item.desgn || ''})`.replace(/\s+-\s+$/, ''),
+        }))
+        setMembers(mappedMembers)
+      } catch (err) {
+        console.error('Failed to load members list for filter helper:', err)
+      }
+    }
+
+    loadMembers()
+  }, [])
+
+  useEffect(() => {
+    if (filterType === 'ACID') {
+      if (selectedAC) {
+        fetchByAcid(selectedAC.ACID)
+      } else {
+        fetchAll()
+      }
       return
     }
 
-    fetchByAcid(selectedAC.ACID)
-  }, [fetchAll, fetchByAcid, selectedAC])
+    if (filterType === 'MEMID') {
+      if (selectedMember) {
+        filterByColumn('MEMID', selectedMember.MemID)
+      } else {
+        fetchAll()
+      }
+      return
+    }
+
+    if (filterType === 'Batch NO') {
+      const batchValue = batchNoSearchVal.trim()
+      if (batchValue) {
+        filterByColumn('ActionID', batchValue)
+      } else {
+        fetchAll()
+      }
+      return
+    }
+
+    fetchAll()
+  }, [filterType, selectedAC, selectedMember, batchNoSearchVal, fetchAll, fetchByAcid, filterByColumn])
+
+  const handleFilterTypeChange = (value) => {
+    setFilterType(value)
+    setSelectedAC(null)
+    setAcSearchVal('')
+    setSelectedMember(null)
+    setMemberSearchVal('')
+    setBatchNoSearchVal('')
+    setSearch('')
+  }
+
+  const handleMemberSearch = (val, results = []) => {
+    setMemberSearchVal(val)
+
+    const selectedItem = results[0]
+    const isExplicitSelection = Boolean(selectedItem)
+
+    if (!isExplicitSelection && selectedMember) {
+      const currentQuery = val.trim().toLowerCase()
+      const matchesCurrentLabel = selectedMember.displayLabel?.toLowerCase() === currentQuery
+      const matchesCurrentId = String(selectedMember.MemID).toLowerCase() === currentQuery
+
+      if (!matchesCurrentLabel && !matchesCurrentId) {
+        setSelectedMember(null)
+      }
+    }
+
+    if (!val) {
+      reset()
+    }
+  }
+
+  const handleBatchNoChange = (val) => {
+    setBatchNoSearchVal(val)
+    if (!val) {
+      reset()
+    }
+  }
 
   const { paged, page, totalPages, next, prev, goTo, reset, total } = usePagination(
     filtered,
     PAGE_SIZE
   )
+
+  const refreshTransactions = () => {
+    if (filterType === 'ACID') {
+      if (selectedAC) {
+        fetchByAcid(selectedAC.ACID)
+      } else {
+        fetchAll()
+      }
+      return
+    }
+
+    if (filterType === 'MEMID') {
+      if (selectedMember) {
+        filterByColumn('MEMID', selectedMember.MemID)
+      } else {
+        fetchAll()
+      }
+      return
+    }
+
+    if (filterType === 'Batch NO') {
+      const batchValue = batchNoSearchVal.trim()
+      if (batchValue) {
+        filterByColumn('ActionID', batchValue)
+      } else {
+        fetchAll()
+      }
+      return
+    }
+
+    fetchAll()
+  }
 
   const handleSearch = (val) => {
     setSearch(val)
@@ -154,41 +266,74 @@ export default function Transactions() {
 
         <div className="w-px h-5 bg-slate-300" />
 
-            <div className="relative">
-        <select
-          aria-label="Filter by"
-          className="input text-xs"
-          onChange={(e) => {
-            console.log('Group by selected:', e.target.value)
-          }}
-        >
-          <option value="">Filter by</option>
-          <option value="ACID">ACID</option>
-          <option value="MEMID">MEMID</option>
-          <option value="Batch NO">Batch NO</option>
-        </select>
-      </div>
+        <div className="relative">
+          <select
+            aria-label="Filter by"
+            className="input text-xs"
+            value={filterType}
+            onChange={(e) => handleFilterTypeChange(e.target.value)}
+          >
+            <option value="">Filter by</option>
+            <option value="ACID">ACID</option>
+            <option value="MEMID">MEMID</option>
+            <option value="Batch NO">Batch NO</option>
+          </select>
+        </div>
 
       <div className="relative flex-1 min-w-[280px] max-w-md">
-        <ComboSearchBox  
-          items={acSubs}
-          value={selectedAC ? selectedAC.displayLabel : acSearchVal}
-          
-          onSearch={handleAccountSearch}
-          
-          onSelect={(item) => {
-            setSelectedAC(item)
-            reset()
-          }}
-          placeholder="Search accounts"
-          searchFields={['ACID', 'ACNO', 'AC_Sub', 'memberName', 'gno']}
-          displayFields={['ACID', 'ACNO', 'AC_Sub', 'memberName', 'gno']}
-          fieldLabels={{ ACID: 'AC ID', ACNO: 'Account No', AC_Sub: 'AC_Sub', memberName: 'Member Name', gno: 'GNO' }}
-          valueField="ACID"
-          highlightField="ACNO"
-          className="w-full"
-          
-        />
+        {filterType === 'ACID' ? (
+          <ComboSearchBox
+            items={acSubs}
+            value={selectedAC ? selectedAC.displayLabel : acSearchVal}
+            onSearch={handleAccountSearch}
+            onSelect={(item) => {
+              setSelectedAC(item)
+              reset()
+            }}
+            placeholder="Search accounts"
+            searchFields={['ACID', 'ACNO', 'AC_Sub', 'memberName', 'gno']}
+            displayFields={['ACID', 'ACNO', 'AC_Sub', 'memberName', 'gno']}
+            fieldLabels={{ ACID: 'AC ID', ACNO: 'Account No', AC_Sub: 'AC_Sub', memberName: 'Member Name', gno: 'GNO' }}
+            valueField="ACID"
+            highlightField="ACNO"
+            className="w-full"
+          />
+        ) : filterType === 'MEMID' ? (
+          <ComboSearchBox
+            items={members}
+            value={selectedMember ? selectedMember.displayLabel : memberSearchVal}
+            onSearch={handleMemberSearch}
+            onSelect={(item) => {
+              setSelectedMember(item)
+              reset()
+            }}
+            placeholder="Search ID, name, rank..."
+            searchFields={['MemID', 'name', 'desgn']}
+            displayFields={['MemID', 'name', 'desgn']}
+            fieldLabels={{ MemID: 'ID', name: 'Name', desgn: 'Rank' }}
+            valueField="MemID"
+            highlightField="name"
+            className="w-full"
+          />
+        ) : filterType === 'Batch NO' ? (
+          <input
+            id="batch-no-search"
+            type="text"
+            inputMode="numeric"
+            value={batchNoSearchVal}
+            onChange={(e) => handleBatchNoChange(e.target.value)}
+            placeholder="Enter Batch No / ActionID"
+            className="input w-full"
+          />
+        ) : (
+          <input
+            type="text"
+            disabled
+            value=""
+            placeholder="Select a filter type"
+            className="input w-full bg-slate-100 cursor-not-allowed"
+          />
+        )}
       </div>
 
               <div className="relative flex-1 min-w-[180px] max-w-xs">
@@ -219,7 +364,7 @@ export default function Transactions() {
 
         <div className="ml-auto flex items-center gap-2">
           <button
-            onClick={() => selectedAC ? fetchByAcid(selectedAC.ACID) : fetchAll()}
+            onClick={refreshTransactions}
             disabled={loading}
             className="btn-secondary gap-1.5"
             aria-label="Refresh transactions"
