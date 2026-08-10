@@ -1,10 +1,11 @@
-const { trans_tb, AC_tb, mem_tb } = require('../models');
+const { trans_tb } = require('../models');
 
 // GET all Transaction records
 const getAll = async (req, res, next) => {
   try {
     const { orderBy, order = "ASC", ...filters } = req.query;
- 
+
+  
     console.log("Query Params:", req.query);
 
     // Build WHERE condition dynamically
@@ -30,13 +31,9 @@ const getAll = async (req, res, next) => {
     console.log("Order:", orderCondition);
 
     const records = await trans_tb.findAll({
-      include: [
-        { model: AC_tb, as: 'account', attributes: ['ACID', 'ACNO'] },
-        { model: mem_tb, as: 'member', attributes: ['gno', 'name'] },
-      ],
       where,
       order: orderCondition,
-      limit: 2000, // Limit to 2000 records for performance
+      limit: 5000, // Limit to 5000 records for performance
     });
 
 
@@ -49,27 +46,6 @@ const getAll = async (req, res, next) => {
     next(error);
   }
 };
-
-// Post Method filter Transaction record by column and value
-const FilterByColumn = async (req, res, next) => {
-  try {
-    const { column, value } = req.body;
-    const records = await trans_tb.findAll({
-      include: [
-        { model: AC_tb, as: 'account', attributes: ['ACID', 'ACNO'] },
-        { model: mem_tb, as: 'member', attributes: ['gno', 'name'] },
-      ],
-      where: {
-        [column]: value
-      }
-    });
-    res.json({ success: true, data: records });
-  } catch (error) {
-    next(error);
-  }
-};  
-
-
 
 // GET single Transaction record by Trans_ID
 const getById = async (req, res, next) => {
@@ -91,10 +67,6 @@ const getById = async (req, res, next) => {
 // GET single Transaction record by ACID
 const getByAcid = async (req, res, next) => {
   try {    const records = await trans_tb.findAll({
-      include: [
-        { model: AC_tb, as: 'account', attributes: ['ACID', 'ACNO'] },
-        { model: mem_tb, as: 'member', attributes: ['gno', 'name'] },
-      ],
       where: { ACID: req.params.acid },
     });
     if (!records || records.length === 0) {
@@ -108,6 +80,20 @@ const getByAcid = async (req, res, next) => {
   }
 };
 
+// Post Method filter Transaction record by column and value
+const FilterByColumn = async (req, res, next) => {
+  try {
+    const { column, value } = req.body;
+    const records = await trans_tb.findAll({
+      where: {
+        [column]: value
+      }
+    });
+    res.json({ success: true, data: records });
+  } catch (error) {
+    next(error);
+  }
+};  
 
 
 // POST create new Transaction record

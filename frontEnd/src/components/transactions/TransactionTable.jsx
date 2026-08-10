@@ -15,25 +15,16 @@ const COLUMNS = [
   { key: 'Total_Bal', label: 'Total Bal', width: 'w-24', isDecimal: true },
   
   { key: 'rate', label: 'Rate', width: 'w-18', isRate: true },
-  // { key: 'Days', label: 'Days', width: 'w-16' },
-  // { key: 'Status', label: 'Status', width: 'w-20' },
-  // { key: 'CB_side', label: 'CB Side', width: 'w-18' },
+  { key: 'Days', label: 'Days', width: 'w-16' },
+//   { key: 'Status', label: 'Status', width: 'w-20' },
+  { key: 'CB_side', label: 'CB Side', width: 'w-18' },
   { key: 'MEMID', label: 'Member ID', width: 'w-20' },
-  { key: 'memberName', label: 'Member Name',  width: 'w-36' },
-  { key: 'gno', label: 'GNO',  width: 'w-36' },
  
-  // { key: 'AC_Sub', label: 'AC Sub', width: 'w-24' },
-  // { key: 'Remarks', label: 'Remarks', width: 'w-40' },
+  { key: 'AC_Sub', label: 'AC Sub', width: 'w-24' },
+  { key: 'Remarks', label: 'Remarks', width: 'w-40' },
   { key: 'ActionID', label: 'Batch No', width: 'w-40' },
   { key: 'Trans_ID', label: 'Trans ID', width: 'w-20' },
 ]
-
-const getValue = (m, col) => {
-  if (col.key === 'memberName') return m.member?.name
-  if (col.key === 'gno') return m.member?.gno
-  if (col.key === 'gno') return m.member?.desgn
-  return m[col.key]
-}
 
 const fmt = (val, col) => {
   if (val === null || val === undefined || val === '') {
@@ -114,7 +105,7 @@ export default function TransactionTable({ transactions }) {
                       ? <TotalCell txn={txn} />
                       : col.key === 'Total_Bal'
                         ? <TotalBalCell txn={txn} />
-                        : fmt(getValue(txn, col), col)}
+                        : fmt(txn[col.key], col)}
                 </td>
               ))}
             </tr>

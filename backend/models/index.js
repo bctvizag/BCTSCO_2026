@@ -11,9 +11,9 @@ const Trans_desc_tb = require('./trans_desc_tb');
 mem_tb.hasMany(AC_tb, { foreignKey: 'MemID', as: 'accounts' });
 AC_tb.belongsTo(mem_tb, { foreignKey: 'MemID', as: 'member' });
 
-// mem_tb -> trans_tb
-mem_tb.hasMany(trans_tb, { foreignKey: 'MemID', as: 'transactions' });
-trans_tb.belongsTo(mem_tb, { foreignKey: 'MemID', as: 'member' });
+// mem_tb -> Action_TB
+mem_tb.hasMany(Action_TB, { foreignKey: 'MemID', as: 'actions' });
+Action_TB.belongsTo(mem_tb, { foreignKey: 'MemID', as: 'member' });
 
 // AC_tb -> Chqdetails
 AC_tb.hasMany(Chqdetails, { foreignKey: 'ACID', as: 'cheques' });
