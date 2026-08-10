@@ -24259,8 +24259,8 @@ var require_models = __commonJS({
     var Trans_desc_tb = require_trans_desc_tb();
     mem_tb.hasMany(AC_tb, { foreignKey: "MemID", as: "accounts" });
     AC_tb.belongsTo(mem_tb, { foreignKey: "MemID", as: "member" });
-    mem_tb.hasMany(Action_TB, { foreignKey: "MemID", as: "actions" });
-    Action_TB.belongsTo(mem_tb, { foreignKey: "MemID", as: "member" });
+    mem_tb.hasMany(trans_tb, { foreignKey: "MemID", as: "transactions" });
+    trans_tb.belongsTo(mem_tb, { foreignKey: "MemID", as: "member" });
     AC_tb.hasMany(Chqdetails, { foreignKey: "ACID", as: "cheques" });
     Chqdetails.belongsTo(AC_tb, { foreignKey: "ACID", as: "account" });
     AC_tb.hasMany(trans_tb, { foreignKey: "ACID", as: "transactions" });
@@ -24710,7 +24710,7 @@ var require_mem_routes = __commonJS({
 // controllers/trans.controller.js
 var require_trans_controller = __commonJS({
   "controllers/trans.controller.js"(exports2, module2) {
-    var { trans_tb } = require_models();
+    var { trans_tb, AC_tb, mem_tb } = require_models();
     var getAll = async (req, res, next) => {
       try {
         const { orderBy, order = "ASC", ...filters } = req.query;
@@ -24731,16 +24731,37 @@ var require_trans_controller = __commonJS({
         console.log("Filters:", where);
         console.log("Order:", orderCondition);
         const records = await trans_tb.findAll({
+          include: [
+            { model: AC_tb, as: "account", attributes: ["ACID", "ACNO"] },
+            { model: mem_tb, as: "member", attributes: ["gno", "name"] }
+          ],
           where,
           order: orderCondition,
-          limit: 5e3
-          // Limit to 5000 records for performance
+          limit: 2e3
+          // Limit to 2000 records for performance
         });
         res.json({
           success: true,
           count: records.length,
           data: records
         });
+      } catch (error) {
+        next(error);
+      }
+    };
+    var FilterByColumn = async (req, res, next) => {
+      try {
+        const { column, value } = req.body;
+        const records = await trans_tb.findAll({
+          include: [
+            { model: AC_tb, as: "account", attributes: ["ACID", "ACNO"] },
+            { model: mem_tb, as: "member", attributes: ["gno", "name"] }
+          ],
+          where: {
+            [column]: value
+          }
+        });
+        res.json({ success: true, data: records });
       } catch (error) {
         next(error);
       }
@@ -24762,6 +24783,10 @@ var require_trans_controller = __commonJS({
     var getByAcid = async (req, res, next) => {
       try {
         const records = await trans_tb.findAll({
+          include: [
+            { model: AC_tb, as: "account", attributes: ["ACID", "ACNO"] },
+            { model: mem_tb, as: "member", attributes: ["gno", "name"] }
+          ],
           where: { ACID: req.params.acid }
         });
         if (!records || records.length === 0) {
@@ -24827,7 +24852,7 @@ var require_trans_controller = __commonJS({
         next(error);
       }
     };
-    module2.exports = { getAll, getById, getByAcid, create, update, remove };
+    module2.exports = { getAll, getById, getByAcid, create, update, remove, FilterByColumn };
   }
 });
 
@@ -24836,13 +24861,14 @@ var require_trans_routes = __commonJS({
   "routes/trans.routes.js"(exports2, module2) {
     var express2 = require_express2();
     var router = express2.Router();
-    var { getAll, getById, getByAcid, create, update, remove } = require_trans_controller();
+    var { getAll, getById, getByAcid, create, update, remove, FilterByColumn } = require_trans_controller();
     router.get("/", getAll);
     router.get("/Trans_ID/:id", getById);
     router.get("/ACID/:acid", getByAcid);
     router.post("/", create);
     router.put("/:id", update);
     router.delete("/:id", remove);
+    router.post("/filter", FilterByColumn);
     module2.exports = router;
   }
 });

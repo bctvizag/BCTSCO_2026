@@ -336,7 +336,12 @@ export default function Transactions() {
         )}
       </div>
 
-              <div className="relative flex-1 min-w-[180px] max-w-xs">
+        <div className="w-px h-5 bg-slate-300" >
+          <select>
+            
+          </select>
+        </div>
+        <div className="relative flex-1 min-w-[180px] max-w-xs">
           <Search
             size={12}
             className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
