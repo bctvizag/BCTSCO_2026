@@ -138,6 +138,11 @@ const trans_tb = sequelize.define(
       type: DataTypes.STRING(50),
       allowNull: true,
     },
+    INT_M: {
+      type: DataTypes.DECIMAL(18, 2),
+      allowNull: true,
+      defaultValue: -1,
+    },
   },
   {
     tableName: 'trans_tb',

@@ -43,11 +43,9 @@ export default function Transactions() {
         txn.Total_amt,
         txn.PRN,
         txn.INT,
-        txn.rate,
-        txn.Days,
-        txn.Status,
+        txn.rate,        
         txn.CB_side,
-        txn.MEMID,
+        txn.member.gno,
         txn.Trans_desc,
         txn.AC_Sub,
         txn.Remarks,
@@ -310,7 +308,7 @@ export default function Transactions() {
             placeholder="Search ID, name, rank..."
             searchFields={['MemID', 'name', 'desgn']}
             displayFields={['MemID', 'name', 'desgn']}
-            fieldLabels={{ MemID: 'ID', name: 'Name', desgn: 'Rank' }}
+            fieldLabels={{ MemID: 'MEMID', name: 'Name', desgn: 'Rank' }}
             valueField="MemID"
             highlightField="name"
             className="w-full"
@@ -336,15 +334,11 @@ export default function Transactions() {
         )}
       </div>
 
-        <div className="w-px h-5 bg-slate-300" >
-          <select>
-            
-          </select>
-        </div>
+ 
         <div className="relative flex-1 min-w-[180px] max-w-xs">
           <Search
             size={12}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-blue-900 pointer-events-none"
           />
           <input
             id="transaction-search"
