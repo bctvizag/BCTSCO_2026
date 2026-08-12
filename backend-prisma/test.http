@@ -1,0 +1,329 @@
+### REST Client test file
+### VS Code extension: REST Client (humao.rest-client)
+###
+### Start API first:
+### npm start
+###
+### Base URL
+@baseUrl = http://localhost:3030/api
+
+### ============================================================
+### HEALTH
+### ============================================================
+
+### API health
+GET http://localhost:3030/
+
+### Database health
+GET http://localhost:3030/health/db
+
+
+### ============================================================
+### MEMBERS - CRUD
+### ============================================================
+
+### Get all members
+GET {{baseUrl}}/members
+
+### Get member by ID
+### Change 1 to an existing MemID
+GET {{baseUrl}}/members/1
+
+### Create member
+# @name createMember
+POST {{baseUrl}}/members
+Content-Type: application/json
+
+{
+  "Memtype": "Regular",
+  "empno": "EMP001",
+  "gno": "G001",
+  "hrno": "HR001",
+  "name": "Test Member",
+  "desgn": "Developer",
+  "sex": "M",
+  "DOB": "1990-01-15",
+  "DOA": "2020-01-10",
+  "DOR": null,
+  "DOM": null,
+  "DIV": "IT",
+  "subdiv": "Software",
+  "Status": "Active",
+  "Phone1": "9876543210"
+}
+
+### Update member
+### Change 1 to the MemID you want to update
+PUT {{baseUrl}}/members/1
+Content-Type: application/json
+
+{
+  "name": "Updated Test Member",
+  "desgn": "Senior Developer",
+  "Status": "Active",
+  "Phone1": "9876543211"
+}
+
+### Delete member
+### WARNING: This permanently deletes the member and may fail if related records exist.
+DELETE {{baseUrl}}/members/1
+
+
+### ============================================================
+### ACCOUNTS - CRUD
+### ============================================================
+
+### Get all accounts
+GET {{baseUrl}}/ac
+
+### Get account by ACID
+GET {{baseUrl}}/ac/1
+
+### Create account
+# @name createAccount
+POST {{baseUrl}}/ac
+Content-Type: application/json
+
+{
+  "MemID": 1,
+  "AC_type": "Loan",
+  "AC_Sub": "LT",
+  "ACNO": "AC001",
+  "DOC": "2026-08-12",
+  "Amt": 100000.00,
+  "Period": 60,
+  "CloseDT": null,
+  "prn": 0,
+  "int": 0,
+  "rate": 10.5,
+  "Closed": false,
+  "Remarks": "Test account",
+  "IntCalType": "Monthly"
+}
+
+### Update account
+PUT {{baseUrl}}/ac/1
+Content-Type: application/json
+
+{
+  "Remarks": "Updated test account",
+  "rate": 11.25,
+  "Closed": false
+}
+
+### Delete account
+### WARNING: Change 1 to an ACID you want to delete.
+DELETE {{baseUrl}}/ac/1
+
+
+### ============================================================
+### ACTIONS - CRUD
+### ============================================================
+
+### Get all actions
+GET {{baseUrl}}/actions
+
+### Get action by ID
+GET {{baseUrl}}/actions/1
+
+### Create action
+# @name createAction
+POST {{baseUrl}}/actions
+Content-Type: application/json
+
+{
+  "ActionDesc": "Test action",
+  "MemID": 1,
+  "ActionDT": "2026-08-12T10:30:00.000Z"
+}
+
+### Update action
+PUT {{baseUrl}}/actions/1
+Content-Type: application/json
+
+{
+  "ActionDesc": "Updated test action",
+  "MemID": 1,
+  "ActionDT": "2026-08-12T11:00:00.000Z"
+}
+
+### Delete action
+DELETE {{baseUrl}}/actions/1
+
+
+### ============================================================
+### CHEQUE DETAILS - CRUD
+### ============================================================
+
+### Get all cheque details
+GET {{baseUrl}}/chqdetails
+
+### Get cheque detail by ID
+GET {{baseUrl}}/chqdetails/1
+
+### Create cheque detail
+# @name createCheque
+POST {{baseUrl}}/chqdetails
+Content-Type: application/json
+
+{
+  "Pay_Mode": "Cheque",
+  "ChqNo": "CHQ001",
+  "ChqDt": "2026-08-12",
+  "Chqamt": 25000.00,
+  "ChaBank": "Test Bank",
+  "ChqName": "Test Member",
+  "ChqACNO": "1234567890",
+  "VrNo": "VR001",
+  "VrDt": "2026-08-12",
+  "ACID": 1,
+  "CrDt": "2026-08-12",
+  "Trans_ID": 1
+}
+
+### Update cheque detail
+PUT {{baseUrl}}/chqdetails/1
+Content-Type: application/json
+
+{
+  "Pay_Mode": "Cheque",
+  "ChqNo": "CHQ001-UPDATED",
+  "Chqamt": 30000.00,
+  "ChaBank": "Updated Test Bank"
+}
+
+### Delete cheque detail
+DELETE {{baseUrl}}/chqdetails/1
+
+
+### ============================================================
+### TRANSACTIONS - CRUD + EXTRA ROUTES
+### ============================================================
+
+### Get all transactions
+GET {{baseUrl}}/transactions
+
+### Get transactions with filters and ordering
+GET {{baseUrl}}/transactions?ACID=1&Status=Posted&orderBy=Trans_dt&order=DESC
+
+### Get transaction by Trans_ID
+GET {{baseUrl}}/transactions/Trans_ID/1
+
+### Get transactions by ACID
+GET {{baseUrl}}/transactions/ACID/1
+
+### Create transaction
+# @name createTransaction
+POST {{baseUrl}}/transactions
+Content-Type: application/json
+
+{
+  "ActionID": 1,
+  "Trans_des_ID": 1,
+  "Trans_dt": "2026-08-12",
+  "CB_dt": "2026-08-12",
+  "ACID": 1,
+  "I_NO": "INV001",
+  "Cash_amt": 5000.00,
+  "Chq_amt": 0,
+  "Adj_amt": 0,
+  "Total_amt": 5000.00,
+  "PRN": 4500.00,
+  "PRN_D": 4500.00,
+  "PRN_C": 0,
+  "PRN_B": 4500.00,
+  "INT": 500.00,
+  "INT_D": 500.00,
+  "INT_C": 0,
+  "INT_B": 500.00,
+  "rate": 10.5,
+  "Days": 30,
+  "Status": "Posted",
+  "T_Order": 1,
+  "CreatedOn": "2026-08-12T10:30:00.000Z",
+  "CreatedBy": "REST Client",
+  "ModifiedOn": null,
+  "ModifiedBy": null,
+  "Remarks": "Test transaction",
+  "CB_side": "D",
+  "MEMID": 1,
+  "Trans_desc": "Test transaction",
+  "IntCalType": "Monthly",
+  "AC_Sub": "LT",
+  "INT_M": 500.00
+}
+
+### Update transaction
+PUT {{baseUrl}}/transactions/1
+Content-Type: application/json
+
+{
+  "Total_amt": 5500.00,
+  "PRN": 5000.00,
+  "INT": 500.00,
+  "Remarks": "Updated test transaction",
+  "ModifiedOn": "2026-08-12T11:30:00.000Z",
+  "ModifiedBy": "REST Client"
+}
+
+### Filter transactions by column
+POST {{baseUrl}}/transactions/filter
+Content-Type: application/json
+
+{
+  "column": "ACID",
+  "value": 1
+}
+
+### Filter transactions by status
+POST {{baseUrl}}/transactions/filter
+Content-Type: application/json
+
+{
+  "column": "Status",
+  "value": "Posted"
+}
+
+### Delete transaction
+DELETE {{baseUrl}}/transactions/1
+
+
+### ============================================================
+### TRANSACTION DESCRIPTIONS - READ ONLY
+### ============================================================
+### This controller does not currently expose POST/PUT/DELETE.
+
+### Get all transaction descriptions
+GET {{baseUrl}}/transDesc
+
+### Get AC_Sub / AC_type values for LT and Thrift
+GET {{baseUrl}}/transDesc/ac-sub
+
+### Get transaction description by ID
+GET {{baseUrl}}/transDesc/1
+
+
+### ============================================================
+### NEGATIVE / VALIDATION TESTS
+### ============================================================
+
+### Invalid member ID
+GET {{baseUrl}}/members/999999999
+
+### Invalid account ID
+GET {{baseUrl}}/ac/999999999
+
+### Invalid transaction ID
+GET {{baseUrl}}/transactions/Trans_ID/999999999
+
+### Invalid transaction filter column
+POST {{baseUrl}}/transactions/filter
+Content-Type: application/json
+
+{
+  "column": "NotAColumn",
+  "value": "test"
+}
+
+### Invalid transaction orderBy field
+GET {{baseUrl}}/transactions?orderBy=NotAColumn&order=DESC

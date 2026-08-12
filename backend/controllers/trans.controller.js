@@ -1,4 +1,4 @@
-const { trans_tb, AC_tb, mem_tb } = require('../models');
+const { trans_tb, AC_tb, mem_tb, Action_TB } = require('../models');
 
 // GET all Transaction records
 const getAll = async (req, res, next) => {
@@ -33,6 +33,7 @@ const getAll = async (req, res, next) => {
       include: [
         { model: AC_tb, as: 'account', attributes: ['ACID', 'ACNO'] },
         { model: mem_tb, as: 'member', attributes: ['gno', 'name'] },
+        // { model: Action_TB, as: 'action' },
       ],
       where,
       order: orderCondition,
@@ -58,6 +59,7 @@ const FilterByColumn = async (req, res, next) => {
       include: [
         { model: AC_tb, as: 'account', attributes: ['ACID', 'ACNO'] },
         { model: mem_tb, as: 'member', attributes: ['gno', 'name'] },
+        // { model: Action_TB, as: 'action' },
       ],
       where: {
         [column]: value
@@ -74,7 +76,13 @@ const FilterByColumn = async (req, res, next) => {
 // GET single Transaction record by Trans_ID
 const getById = async (req, res, next) => {
   try {
-    const record = await trans_tb.findByPk(req.params.id);
+    const record = await trans_tb.findByPk(req.params.id, {
+      include: [
+        { model: AC_tb, as: 'account', attributes: ['ACID', 'ACNO'] },
+        { model: mem_tb, as: 'member', attributes: ['gno', 'name'] },
+        // { model: Action_TB, as: 'action' },
+      ],
+    });
     if (!record) {
       return res.status(404).json({
         success: false,
@@ -90,10 +98,12 @@ const getById = async (req, res, next) => {
 
 // GET single Transaction record by ACID
 const getByAcid = async (req, res, next) => {
-  try {    const records = await trans_tb.findAll({
+  try {
+    const records = await trans_tb.findAll({
       include: [
         { model: AC_tb, as: 'account', attributes: ['ACID', 'ACNO'] },
         { model: mem_tb, as: 'member', attributes: ['gno', 'name'] },
+        // { model: Action_TB, as: 'action' },
       ],
       where: { ACID: req.params.acid },
     });

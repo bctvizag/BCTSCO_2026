@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      =env("DATABASE_URL")
+}
+
+model AC_tb {
+  ACID       Int       @id(map: "PK_AC_tb") @default(autoincrement())
+  MemID      Int?
+  AC_type    String?   @db.VarChar(10)
+  AC_Sub     String?   @db.VarChar(50)
+  ACNO       String?   @db.VarChar(20)
+  DOC        DateTime? @db.DateTime
+  Amt        Decimal?  @default(0, map: "DF_AC_tb_Amt") @db.Decimal(18, 2)
+  Period     Int?      @default(0, map: "DF_AC_tb_Period")
+  CloseDT    DateTime? @db.DateTime
+  prn        Decimal?  @default(0, map: "DF_AC_tb_prn") @db.Decimal(18, 2)
+  int        Decimal?  @default(0, map: "DF_AC_tb_int") @db.Decimal(18, 2)
+  rate       Decimal?  @default(0, map: "DF_AC_tb_rate") @db.Decimal(18, 2)
+  Closed     String?   @default("N", map: "DF_AC_tb_Closed") @db.VarChar(1)
+  Remarks    String?   @db.NVarChar(250)
+  IntCalType String?   @default("D", map: "DF_AC_tb_IntCalType") @db.VarChar(2)
+
+  member      mem_tb?      @relation("MemberAccounts", fields: [MemID], references: [MemID], onDelete: NoAction, onUpdate: NoAction)
+  cheques     Chqdetails[] @relation("AccountCheques")
+  transactions trans_tb[]  @relation("AccountTransactions")
+
+  @@map("AC_tb")
+}
+
+model Action_TB {
+  ActionID   Int       @id(map: "PK_Action_TB") @default(autoincrement())
+  ActionDesc String?   @db.VarChar(250)
+  MemID      Int?
+  ActionDT   DateTime? @db.DateTime
+
+  transactions trans_tb[] @relation("ActionTransactions")
+
+  @@map("Action_TB")
+}
+
+model Chqdetails {
+  ChqID    Int       @id(map: "PK_Chqdetails") @default(autoincrement())
+  Pay_Mode String?   @db.NChar(5)
+  ChqNo    String?   @db.NChar(20)
+  ChqDt    DateTime? @db.DateTime
+  Chqamt   Decimal?  @db.Decimal(18, 2)
+  ChaBank  String?   @db.NVarChar(30)
+  ChqName  String?   @db.NVarChar(150)
+  ChqACNO  String?   @db.NVarChar(50)
+  VrNo     Int?
+  VrDt     DateTime? @db.DateTime
+  ACID     Int?
+  CrDt     DateTime? @db.DateTime
+  Trans_ID Int?
+
+  account     AC_tb?    @relation("AccountCheques", fields: [ACID], references: [ACID], onDelete: NoAction, onUpdate: NoAction)
+  transaction trans_tb? @relation("TransactionCheques", fields: [Trans_ID], references: [Trans_ID], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("Chqdetails")
+}
+
+model mem_tb {
+  MemID   Int       @id(map: "PK_mem_tb") @default(autoincrement())
+  Memtype String?   @default("EMP", map: "DF_mem_tb_Memtype") @db.VarChar(10)
+  empno   Int?
+  gno     Int?      @unique(map: "UQ_mem_tb_GNO")
+  hrno    Int?
+  name    String?   @db.VarChar(50)
+  desgn   String?   @db.VarChar(20)
+  sex     String?   @db.VarChar(1)
+  DOB     DateTime? @db.DateTime
+  DOA     DateTime? @db.DateTime
+  DOR     DateTime? @db.DateTime
+  DOM     DateTime? @db.DateTime
+  DIV     String?   @db.VarChar(20)
+  subdiv  String?   @db.VarChar(20)
+  Status  String?   @db.VarChar(50)
+  Phone1  String?   @db.VarChar(10)
+
+  accounts     AC_tb[]   @relation("MemberAccounts")
+  transactions trans_tb[] @relation("MemberTransactions")
+
+  @@map("mem_tb")
+}
+
+model trans_tb {
+    Trans_ID     Int       @id(map: "PK_Data_tb") @default(autoincrement())
+    ActionID     Int?
+    Trans_des_ID Int?
+    Trans_dt     DateTime? @db.DateTime
+    CB_dt        DateTime? @db.DateTime
+    ACID         Int?
+    I_NO         String?   @db.VarChar(10)
+    Cash_amt     Decimal?  @default(0, map: "DF_trans_tb_Cash_amt") @db.Decimal(18, 2)
+    Chq_amt      Decimal?  @default(0, map: "DF_trans_tb_Chq_amt") @db.Decimal(18, 2)
+    Adj_amt      Decimal?  @default(0, map: "DF_trans_tb_Adj_amt") @db.Decimal(18, 2)
+    Total_amt    Decimal?  @default(0, map: "DF_trans_tb_Total_amt") @db.Decimal(18, 2)
+    PRN          Decimal?  @default(0, map: "DF_trans_tb_PRN") @db.Decimal(18, 2)
+    PRN_D        Decimal?  @default(0, map: "DF_trans_tb_PRN_T") @db.Decimal(18, 2)
+    PRN_C        Decimal?  @default(0, map: "DF_trans_tb_PRN_C") @db.Decimal(18, 2)
+    PRN_B        Decimal?  @default(0, map: "DF_trans_tb_PRN_B") @db.Decimal(18, 2)
+    INT          Decimal?  @default(0, map: "DF_trans_tb_INT") @db.Decimal(18, 2)
+    INT_D        Decimal?  @default(0, map: "DF_trans_tb_INT_D") @db.Decimal(18, 2)
+    INT_C        Decimal?  @default(0, map: "DF_trans_tb_INT_C") @db.Decimal(18, 2)
+    INT_B        Decimal?  @default(0, map: "DF_trans_tb_INT_B") @db.Decimal(18, 2)
+    rate         Decimal?  @default(0, map: "DF_trans_tb_rate") @db.Decimal(18, 2)
+    Days         Int?      @default(0, map: "DF_trans_tb_Days")
+    Status       String?   @default("U", map: "DF_trans_tb_Status") @db.VarChar(1)
+    T_Order      Int?      @default(1, map: "DF_trans_tb_T_Order")
+    CreatedOn    DateTime? @db.DateTime
+    CreatedBy    Int?
+    ModifiedOn   DateTime? @db.DateTime
+    ModifiedBy   Int?
+    Remarks      String?   @db.VarChar(50)
+    CB_side      String?   @db.NChar(1)
+    MEMID        Int?
+    Trans_desc   String?   @db.VarChar(150)
+    IntCalType   String?   @default("D", map: "DF_trans_tb_IntCalType") @db.VarChar(2)
+    AC_Sub       String?   @db.VarChar(100)
+    INT_M        Decimal?  @default(-1, map: "DF_trans_tb_INT_M") @db.Decimal(18, 2)
+
+  account      AC_tb?       @relation("AccountTransactions", fields: [ACID], references: [ACID], onDelete: NoAction, onUpdate: NoAction)
+  member       mem_tb?      @relation("MemberTransactions", fields: [MEMID], references: [MemID], onDelete: NoAction, onUpdate: NoAction)
+  action       Action_TB?   @relation("ActionTransactions", fields: [ActionID], references: [ActionID], onDelete: NoAction, onUpdate: NoAction)
+  cheques      Chqdetails[] @relation("TransactionCheques")
+  
+  @@index([ACID, Trans_dt], map: "IX_trans_tb_ACID_Trans_dt")
+  @@map("trans_tb")
+}
+
+model trans_desc_tb {
+  Trans_des_ID Int     @id @default(autoincrement())
+  Head         String? @db.VarChar(50)
+  AC_Sub       String? @db.VarChar(50)
+  Trans_desc   String? @db.VarChar(50)
+  AC_type      String? @db.VarChar(50)
+  CB_side      String? @db.VarChar(50)
+  TransType    String? @db.VarChar(50)
+  I_type       String? @db.VarChar(50)
+  Post_type    String? @db.VarChar(50)
+  Memtype      String? @db.VarChar(50)
+
+  @@map("trans_desc_tb")
+}

@@ -27,6 +27,9 @@ trans_tb.belongsTo(AC_tb, { foreignKey: 'ACID', as: 'account' });
 trans_tb.hasMany(Chqdetails, { foreignKey: 'Trans_ID', as: 'cheques' });
 Chqdetails.belongsTo(trans_tb, { foreignKey: 'Trans_ID', as: 'transaction' });
 
+Action_TB.hasMany(trans_tb, { foreignKey: 'ActionID', as: 'transactions' });
+trans_tb.belongsTo(Action_TB, { foreignKey: 'ActionID', as: 'action' });
+
 module.exports = {
   sequelize,
   AC_tb,
