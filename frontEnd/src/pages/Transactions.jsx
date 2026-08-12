@@ -23,7 +23,7 @@ export default function Transactions() {
   const [memberSearchVal, setMemberSearchVal] = useState('')
   const [batchNoSearchVal, setBatchNoSearchVal] = useState('')
   const [search, setSearch] = useState('')
-  const [filterType, setFilterType] = useState('ACID')
+  const [filterType, setFilterType] = useState('Batch NO')
 
   const filtered = useMemo(() => {
     let result = transactions
@@ -206,6 +206,7 @@ export default function Transactions() {
   const handleExport = () => {
     const exportData = filtered.map((txn) => ({
       'Trans ID': txn.Trans_ID,
+      'Batch NO': txn.ActionID,
       Date: txn.Trans_dt ? txn.Trans_dt.slice(0, 10) : '',
       'AC ID': txn.ACID,
       Invoice: txn.I_NO,
@@ -217,8 +218,8 @@ export default function Transactions() {
       INT: txn.INT,
       'Total Bal': Number(txn.PRN_B ?? 0) + Number(txn.INT_B ?? 0),
       Rate: txn.rate,
-      Days: txn.Days,
-      Status: txn.Status,
+      // Days: txn.Days,
+      // Status: txn.Status,
       'CB Side': txn.CB_side,
       'Member ID': txn.MEMID,
       Description: txn.Trans_desc,
@@ -272,9 +273,10 @@ export default function Transactions() {
             onChange={(e) => handleFilterTypeChange(e.target.value)}
           >
             <option value="">Filter by</option>
+            <option value="Batch NO">Batch NO</option>
             <option value="ACID">ACID</option>
             <option value="MEMID">MEMID</option>
-            <option value="Batch NO">Batch NO</option>
+            
           </select>
         </div>
 
@@ -392,7 +394,8 @@ export default function Transactions() {
           </div>
         ) : (
           <>
-            <TransactionTable transactions={paged} />
+          <TransactionTable transactions={transactions} />
+            {/* <TransactionTable transactions={paged} />
             <Pagination
               page={page}
               totalPages={totalPages}
@@ -401,7 +404,7 @@ export default function Transactions() {
               onPrev={prev}
               onNext={next}
               onGoTo={goTo}
-            />
+            /> */}
           </>
         )}
       </div> 

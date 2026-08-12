@@ -1,68 +1,63 @@
 import { useMemo } from 'react'
+import ReportTable from './ReportTable'
 import TotalCell from './TotalCell'
 import TotalBalCell from './TotalBalCell'
 
-const COLUMNS = [   
-  { key: 'ACID', label: 'AC ID', width: 'w-16' },  
-  { key: 'Trans_desc', label: 'Description', width: 'w-40' },
-  { key: 'Trans_dt', label: 'Date', width: 'w-24', isDate: true },
-  { key: 'CB_dt', label: 'CB Dt', width: 'w-24', isDate: true },
-  
-//   { key: 'I_NO', label: 'Invoice', width: 'w-28' },
-  { key: 'Total_amt', label: 'Total', width: 'w-24', isDecimal: true },
-  { key: 'PRN', label: 'PRN', width: 'w-20', isDecimal: true },
-  { key: 'INT', label: 'INT', width: 'w-20', isDecimal: true },
-  { key: 'Total_Bal', label: 'Total Bal', width: 'w-24', isDecimal: true },
-  
-  { key: 'rate', label: 'Rate', width: 'w-18', isRate: true },
-  // { key: 'Days', label: 'Days', width: 'w-16' },
-  // { key: 'Status', label: 'Status', width: 'w-20' },
-  // { key: 'CB_side', label: 'CB Side', width: 'w-18' },
-  { key: 'MEMID', label: 'Member ID', width: 'w-20' },
-  { key: 'memberName', label: 'Member Name',  width: 'w-36' },
-  { key: 'gno', label: 'GNO',  width: 'w-36' },
- 
-  // { key: 'AC_Sub', label: 'AC Sub', width: 'w-24' },
-  // { key: 'Remarks', label: 'Remarks', width: 'w-40' },
-  { key: 'ActionID', label: 'Batch No', width: 'w-40' },
-  { key: 'Trans_ID', label: 'Trans ID', width: 'w-20' },
+// Shared "empty" placeholder, matching the previous fmt() behavior.
+const dash = <span className="text-slate-300">—</span>
+
+const isEmpty = (val) => val === null || val === undefined || val === ''
+
+const textFormat = (val) => (isEmpty(val) ? dash : val)
+
+const dateFormat = (val) => (isEmpty(val) ? dash : val.toString().slice(0, 10))
+
+const decimalFormat = (val) =>
+  isEmpty(val)
+    ? dash
+    : Number(val).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+
+const rateFormat = (val) => (isEmpty(val) ? dash : Number(val).toString() + '%')
+
+// Column widths are now pixel numbers (ReportTable no longer uses Tailwind
+// width classes), roughly matching the previous w-* utility values.
+const COLUMNS = [
+  { key: 'ACID', header: 'AC ID', width: 64, format: textFormat },
+  { key: 'Trans_desc', header: 'Description', width: 160, format: textFormat },
+  { key: 'Trans_dt', header: 'Date', width: 96, isDate: true, format: dateFormat },
+  { key: 'CB_dt', header: 'CB Dt', width: 96, isDate: true, format: dateFormat },
+
+  // { key: 'I_NO', header: 'Invoice', width: 112 },
+  { key: 'Total_amt', header: 'Total', width: 96, hideFilter: true, summary: 'sum', format: (val, row) => <TotalCell txn={row} /> },
+  { key: 'PRN', header: 'PRN', width: 80, format: decimalFormat },
+  { key: 'INT', header: 'INT', width: 80, format: decimalFormat },
+  { key: 'Total_Bal', header: 'Total Bal', width: 96, hideFilter: true, format: (val, row) => <TotalBalCell txn={row} /> },
+
+  { key: 'rate', header: 'Rate', width: 48, format: rateFormat, summary: 'avg' },
+  // { key: 'Days', header: 'Days', width: 64 },
+  // { key: 'Status', header: 'Status', width: 80 },
+  // { key: 'CB_side', header: 'CB Side', width: 72 },
+  { key: 'MEMID', header: 'Member ID', width: 80, format: textFormat },
+  { key: 'memberName', header: 'Member Name', width: 144, format: textFormat },
+  { key: 'gno', header: 'GNO', width: 144, format: textFormat },
+
+  // { key: 'AC_Sub', header: 'AC Sub', width: 96 },
+  // { key: 'Remarks', header: 'Remarks', width: 160 },
+  { key: 'ActionID', header: 'Batch No', width: 160, format: textFormat },
+  { key: 'Trans_ID', header: 'Trans ID', width: 80, format: textFormat },
 ]
 
-const getValue = (m, col) => {
-  if (col.key === 'memberName') return m.member?.name
-  if (col.key === 'gno') return m.member?.gno
-  if (col.key === 'gno') return m.member?.desgn
-  return m[col.key]
-}
-
-const fmt = (val, col) => {
-  if (val === null || val === undefined || val === '') {
-    return <span className="text-slate-300">—</span>
-  }
-
-  if (col.isDate) return val.toString().slice(0, 10)
-  if (col.isDecimal) {
-    return Number(val).toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  }
-  if (col.isRate) return Number(val).toString() + '%'
-
-  return val
-}
-
-const statusBadge = (status) => {
-  const map = {
-    Active: 'badge-green',
-    Pending: 'badge-blue',
-    Cleared: 'badge-green',
-    Cancelled: 'badge-red',
-    Closed: 'badge-gray',
-  }
-
-  return <span className={`badge ${map[status] ?? 'badge-blue'}`}>{status}</span>
-}
+// Conditional row formatting, evaluated top-to-bottom (first match wins).
+// Example: highlight "P" (Pay-in) side CB rows in light green with red text.
+const ROW_STYLES = [
+  {
+    when: (row) => row.CB_side === 'P',
+    style: { backgroundColor: 'lightgreen', color: 'red' },
+  },
+]
 
 export default function TransactionTable({ transactions }) {
   const normalized = useMemo(
@@ -75,6 +70,10 @@ export default function TransactionTable({ transactions }) {
           ...txn,
           Status: txn.Status ?? 'Pending',
           Total_Bal: prnB + intB,
+          // Flatten nested member fields so ReportTable's flat row[key]
+          // lookups (sorting, filtering, CSV export) work on them directly.
+          memberName: txn.member?.name,
+          gno: txn.member?.gno,
         }
       }),
     [transactions]
@@ -89,38 +88,15 @@ export default function TransactionTable({ transactions }) {
   }
 
   return (
-    <div className="overflow-x-auto scrollbar-thin">
-      <table className="w-full border-collapse text-xs">
-        <thead>
-          <tr className="border-b border-slate-200">
-            {COLUMNS.map((col) => (
-              <th key={col.key} className={`table-header ${col.width}`}>
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100">
-          {normalized.map((txn) => (
-            <tr
-              key={txn.Trans_ID}
-              className="hover:bg-primary-50 transition-colors duration-100"
-            >
-              {COLUMNS.map((col) => (
-                <td key={`${txn.Trans_ID}-${col.key}`} className="table-cell">
-                  {col.key === 'Status'
-                    ? statusBadge(txn[col.key])
-                    : col.key === 'Total_amt'
-                      ? <TotalCell txn={txn} />
-                      : col.key === 'Total_Bal'
-                        ? <TotalBalCell txn={txn} />
-                        : fmt(getValue(txn, col), col)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ReportTable
+      data={normalized}
+      customColumns={COLUMNS}
+      enableFilters
+      enableExport
+      displayFooter
+      defaultAlign="left"
+      exportFilename="transactions.csv"
+      conditionalRowStyles={ROW_STYLES}
+    />
   )
 }
